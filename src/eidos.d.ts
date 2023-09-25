@@ -131,6 +131,8 @@ interface Space {
   moveDraftIntoTable(id: string, tableId: string): Promise<boolean>;
   listUiColumns(tableName: string): Promise<IUIColumn[]>;
   listAllUiColumns(): Promise<any[]>;
+  addRow(tableName: string, data: any): Promise<any[]>;
+  isTableExist(id: string): Promise<boolean>;
 }
 
 declare const eidos: Eidos;
