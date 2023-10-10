@@ -97,7 +97,8 @@ interface Space {
    */
   createOrUpdateDocWithMarkdown(
     docId: string,
-    mdStr: string
+    mdStr: string,
+    parentId?: string
   ): Promise<
     | {
         id: string;
