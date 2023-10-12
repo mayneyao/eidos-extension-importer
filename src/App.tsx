@@ -1,17 +1,31 @@
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
 import "./App.css";
 import { Button } from "./components/ui/button";
 import { useNotionImporter } from "./service/notion/hooks";
 
+import { useLocalStorageState } from "ahooks";
+
 function App() {
-  const [notionToken, setNotionToken] = useState("");
-  const [databaseId, setDatabaseId] = useState("");
-  const { handleImport, loading } = useNotionImporter(databaseId, notionToken);
+  const [notionToken, setNotionToken] =
+    useLocalStorageState<string>("notionToken");
+  const [databaseId, setDatabaseId] =
+    useLocalStorageState<string>("databaseId");
+  const [spaceName, setSpaceName] = useLocalStorageState<string>("spaceName");
+  const { handleImport, loading } = useNotionImporter(
+    databaseId,
+    notionToken,
+    spaceName
+  );
 
   return (
     <>
       <div className="flex flex-col gap-2 max-w-md">
+        <Input
+          type="text"
+          placeholder="Space"
+          value={spaceName}
+          onChange={(e) => setSpaceName(e.target.value)}
+        />
         <Input
           type="text"
           placeholder="Notion Token"

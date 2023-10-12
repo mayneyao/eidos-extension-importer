@@ -12,9 +12,16 @@ import {
 } from ".";
 import { sleep } from "@/lib/utils";
 
-export const useNotionImporter = (databaseId: string, notionToken: string) => {
+export const useNotionImporter = (
+  databaseId: string | undefined,
+  notionToken: string | undefined,
+  spaceName: string | undefined
+) => {
   const [loading, setLoading] = useState(false);
   const handleImport = async () => {
+    if (!databaseId || !spaceName || !notionToken) {
+      return console.warn("databaseId, spaceName, notionToken is required");
+    }
     setLoading(true);
     const client = new Client({
       auth: notionToken,
@@ -23,7 +30,7 @@ export const useNotionImporter = (databaseId: string, notionToken: string) => {
     const database = await getDatabase(client, databaseId);
     const records = await getRecords(client, databaseId);
     console.log(records);
-    const space = eidos.space("notion2");
+    const space = eidos.space(spaceName);
     const isTableExist = await space.isTableExist(databaseId);
     let idSet: Set<string> = new Set();
     if (isTableExist) {
@@ -58,10 +65,15 @@ export const useNotionImporter = (databaseId: string, notionToken: string) => {
         continue;
       }
       try {
-        let data = properties2Object((record as PageObjectResponse).properties);
+        const recordObj = properties2Object(
+          (record as PageObjectResponse).properties
+        );
+        let data = recordObj.data;
         // remove value is null/undefined/false
         data = Object.fromEntries(
-          Object.entries(data).filter(([_, v]) => v != null && v !== false)
+          Object.entries(recordObj.data).filter(
+            ([_, v]) => v != null && v !== false
+          )
         );
         const rowData = { _id: record.id, ...data };
         await space.addRow(`tb_${databaseId}`, rowData);

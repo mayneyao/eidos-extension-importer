@@ -33,10 +33,12 @@ export const getRecords = async (client: Client, databaseId: string) => {
 export const properties2Object = (
   properties: PageObjectResponse["properties"]
 ) => {
+  let title: string | undefined;
   const entry = Object.entries(properties).map(([key, value]) => {
     // code below is co-authored with Github Copilot
     switch (value.type) {
       case "title":
+        title = value.title[0]?.plain_text;
         return [key, value.title[0]?.plain_text];
       case "rich_text":
         return [key, value.rich_text[0]?.plain_text];
@@ -101,7 +103,10 @@ export const properties2Object = (
         return [key, value];
     }
   });
-  return Object.fromEntries(entry);
+  return {
+    title,
+    data: Object.fromEntries(entry),
+  };
 };
 
 type DatabasePropertyConfigResponse = Awaited<
