@@ -5,14 +5,34 @@ import {
   UserObjectResponse,
 } from "@notionhq/client/build/src/api-endpoints";
 import { NotionToMarkdown } from "notion-to-md";
+import { MdBlock } from "notion-to-md/build/types";
 
 // passing notion client to the option
 
-export const getPageMarkdown = async (client: Client, pageId: string) => {
+export const getPageMarkdown = async (
+  client: Client,
+  pageId: string,
+  timeout: number = 10000
+) => {
   const n2m = new NotionToMarkdown({ notionClient: client });
-  const mdblocks = await n2m.pageToMarkdown(pageId);
-  const mdString = n2m.toMarkdownString(mdblocks);
-  return mdString.parent;
+
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(() => {
+      reject(new Error("Request timed out"));
+    }, timeout);
+  });
+
+  try {
+    const mdblocks = await Promise.race([
+      n2m.pageToMarkdown(pageId),
+      timeoutPromise,
+    ]);
+    const mdString = n2m.toMarkdownString(mdblocks as MdBlock[]);
+    return mdString.parent;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
 };
 
 export const getDatabase = async (
@@ -171,17 +191,16 @@ export const transformDatabaseSchema = (data: {
   // uuid
   const rawTableName = `tb_${tableId}`;
 
-  // table base sql
-  let sql = `CREATE TABLE ${rawTableName} (_id TEXT PRIMARY KEY NOT NULL,title TEXT NULL);\n`;
-  // let sql = `CREATE TABLE ${rawTableName} (_id TEXT PRIMARY KEY NOT NULL);\n`;
-  sql += `INSERT INTO ${ColumnTableName}(name, type, table_name, table_column_name) VALUES ('_id', 'row-id', '${rawTableName}', '_id');\n`;
-  sql += `INSERT INTO ${ColumnTableName}(name, type, table_name, table_column_name) VALUES ('title', 'title', '${rawTableName}', 'title');\n`;
+  let titleName = "title";
 
   const fields = Object.values(properties).map((property) => {
     const { type } = property;
     const eidosFieldType = notion2EidosTypeMap[type] || FieldType.Text;
     const rawColumnName = generateColumnName();
     let fieldProperty = null;
+    if (type === "title") {
+      titleName = property.name;
+    }
     if (type === "multi_select" || type === "select" || type === "status") {
       fieldProperty = {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -196,6 +215,12 @@ export const transformDatabaseSchema = (data: {
       property: fieldProperty,
     };
   });
+
+  // table base sql
+  let sql = `CREATE TABLE ${rawTableName} (_id TEXT PRIMARY KEY NOT NULL,title TEXT NULL);\n`;
+  // let sql = `CREATE TABLE ${rawTableName} (_id TEXT PRIMARY KEY NOT NULL);\n`;
+  sql += `INSERT INTO ${ColumnTableName}(name, type, table_name, table_column_name) VALUES ('_id', 'row-id', '${rawTableName}', '_id');\n`;
+  sql += `INSERT INTO ${ColumnTableName}(name, type, table_name, table_column_name) VALUES ('${titleName}', 'title', '${rawTableName}', 'title');\n`;
 
   // TODO: we need a rpc method to create a database with given columns
   return {

@@ -12,15 +12,36 @@ import {
 } from ".";
 import { sleep } from "@/lib/utils";
 
-export const useNotionImporter = (
-  databaseId: string | undefined,
-  notionToken: string | undefined,
-  spaceName: string | undefined
-) => {
+export const useNotionImporter = (props: {
+  databaseId: string | undefined;
+  notionToken: string | undefined;
+  spaceName: string | undefined;
+  withPageContent?: boolean;
+  addLog: (log: any) => void;
+}) => {
+  const {
+    databaseId,
+    notionToken,
+    spaceName,
+    withPageContent = false,
+    addLog,
+  } = props;
   const [loading, setLoading] = useState(false);
+  const [count, setCount] = useState(0);
+  const [maxCount, setMaxCount] = useState(0);
+
   const handleImport = async () => {
+    addLog({
+      date: "2023-11-13 14:20:00",
+      level: "INFO",
+      message: "Import started",
+    });
     if (!databaseId || !spaceName || !notionToken) {
-      return console.warn("databaseId, spaceName, notionToken is required");
+      return addLog({
+        date: new Date().toISOString(),
+        level: "WARN",
+        message: "databaseId, spaceName, notionToken is required",
+      });
     }
     setLoading(true);
     const client = new Client({
@@ -29,7 +50,12 @@ export const useNotionImporter = (
     });
     const database = await getDatabase(client, databaseId);
     const records = await getRecords(client, databaseId);
-    console.log(records);
+    addLog({
+      date: new Date().toISOString(),
+      level: "INFO",
+      message: `Got ${records.length} records from Notion database`,
+    });
+    setMaxCount(records.length);
     const space = eidos.space(spaceName);
     const isTableExist = await space.isTableExist(databaseId);
     let idSet: Set<string> = new Set();
@@ -41,20 +67,39 @@ export const useNotionImporter = (
         "object"
       );
       idSet = new Set(rows.map((r: any) => r._id));
-      console.log("table exist, skip create table");
+      addLog({
+        date: new Date().toISOString(),
+        level: "INFO",
+        message: `Table tb_${databaseId} already exists, skipping table creation`,
+      });
     } else {
       const res2 = transformDatabaseSchema({
         tableId: databaseId,
         title: database.title.map((r) => r.plain_text).join(""),
         properties: database.properties,
       });
-      console.log(res2.createTableSql);
+      addLog({
+        date: new Date().toISOString(),
+        level: "INFO",
+        message: `Creating table tb_${databaseId}`,
+      });
+      addLog({
+        date: new Date().toISOString(),
+        level: "DEBUG",
+        message: `createTableSql: ${res2.createTableSql}`,
+      });
       // create table
       await space.createTable(databaseId, res2.name, res2.createTableSql);
       // add fields
       for (const field of res2.fields) {
-        await space.addColumn(field);
-        console.log(`add column ${field.name} success`);
+        if (field.type !== "title") {
+          await space.addColumn(field);
+          addLog({
+            date: new Date().toISOString(),
+            level: "INFO",
+            message: `Added column ${field.name} to table tb_${databaseId}`,
+          });
+        }
       }
     }
 
@@ -77,23 +122,38 @@ export const useNotionImporter = (
         );
         const rowData = { _id: record.id, ...data };
         await space.addRow(`tb_${databaseId}`, rowData);
-        console.log(`add row ${docId} success`);
-
-        // create subDoc with markdown
-        const mdString = await getPageMarkdown(client, record.id);
-        if (mdString.length) {
-          await space.createOrUpdateDocWithMarkdown(
-            docId,
-            mdString,
-            databaseId
-          );
-          console.log(`add doc ${docId} success`);
+        addLog({
+          date: new Date().toISOString(),
+          level: "INFO",
+          message: `Added row ${docId} to table tb_${databaseId}`,
+        });
+        if (withPageContent) {
+          // create subDoc with markdown
+          const mdString = await getPageMarkdown(client, record.id);
+          if (mdString.length) {
+            await space.createOrUpdateDocWithMarkdown(
+              docId,
+              mdString,
+              databaseId
+            );
+            addLog({
+              date: new Date().toISOString(),
+              level: "INFO",
+              message: `Added doc ${docId} to table tb_${databaseId}`,
+            });
+          }
+          await sleep(1000);
         }
       } catch (error) {
-        console.warn(`add row ${docId} failed, wait 2s`);
-        sleep(2000);
+        addLog({
+          date: new Date().toISOString(),
+          level: "WARN",
+          message: `Failed to add row ${docId}, waiting 2s`,
+        });
+        await sleep(2000);
+      } finally {
+        setCount((c) => c + 1);
       }
-      sleep(1000);
     }
     setLoading(false);
   };
@@ -101,5 +161,7 @@ export const useNotionImporter = (
   return {
     handleImport,
     loading,
+    count,
+    maxCount,
   };
 };
