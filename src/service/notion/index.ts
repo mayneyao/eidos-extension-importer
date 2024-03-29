@@ -217,7 +217,15 @@ export const transformDatabaseSchema = (data: {
   });
 
   // table base sql
-  let sql = `CREATE TABLE ${rawTableName} (_id TEXT PRIMARY KEY NOT NULL,title TEXT NULL);\n`;
+  let sql = `
+CREATE TABLE ${rawTableName} (
+  _id TEXT PRIMARY KEY NOT NULL,title TEXT NULL,
+  _created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  _last_edited_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  _created_by TEXT DEFAULT 'unknown',
+  _last_edited_by TEXT DEFAULT 'unknown'
+);\n
+  `;
   // let sql = `CREATE TABLE ${rawTableName} (_id TEXT PRIMARY KEY NOT NULL);\n`;
   sql += `INSERT INTO ${ColumnTableName}(name, type, table_name, table_column_name) VALUES ('_id', 'row-id', '${rawTableName}', '_id');\n`;
   sql += `INSERT INTO ${ColumnTableName}(name, type, table_name, table_column_name) VALUES ('${titleName}', 'title', '${rawTableName}', 'title');\n`;
