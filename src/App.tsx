@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { useLocalStorageState } from "ahooks";
 import { useLogStore } from "./components/component/store";
 import { LogViewer } from "./components/component/log-viewer";
+import { Label } from "./components/ui/label";
 
 function App() {
   const [notionToken, setNotionToken] =
@@ -28,24 +29,42 @@ function App() {
   return (
     <div className="container p-4 grid gap-4">
       <div className="flex flex-col gap-2 max-w-md" id="form">
-        <Input
-          type="text"
-          placeholder="Space"
-          value={spaceName}
-          onChange={(e) => setSpaceName(e.target.value)}
-        />
-        <Input
-          type="password"
-          placeholder="Notion Token"
-          value={notionToken}
-          onChange={(e) => setNotionToken(e.target.value)}
-        />
-        <Input
-          type="text"
-          placeholder="Database ID"
-          value={databaseId}
-          onChange={(e) => setDatabaseId(e.target.value)}
-        />
+        <div className="flex items-center gap-2 justify-between">
+          <Label htmlFor="space">Space</Label>
+          <Input
+            id="space"
+            type="text"
+            placeholder="Space"
+            value={spaceName}
+            className="max-w-[300px]"
+            onChange={(e) => setSpaceName(e.target.value)}
+          />
+        </div>
+
+        <div className="flex items-center gap-2 justify-between">
+          <Label htmlFor="notion-token">Notion Token</Label>
+          <Input
+            id="notion-token"
+            type="password"
+            className="max-w-[300px]"
+            placeholder="Notion Token"
+            value={notionToken}
+            onChange={(e) => setNotionToken(e.target.value)}
+          />
+        </div>
+
+        <div className="flex items-center gap-2 justify-between">
+          <Label htmlFor="database-id">Database ID</Label>
+          <Input
+            id="database-id"
+            type="text"
+            className="max-w-[300px]"
+            placeholder="Database ID"
+            value={databaseId}
+            onChange={(e) => setDatabaseId(e.target.value)}
+          />
+        </div>
+
         <div className="flex items-center space-x-2">
           <Switch
             id="withPageContent"
@@ -58,7 +77,7 @@ function App() {
           Import
         </Button>
       </div>
-      <div className="w-full">
+      <div className="w-full max-w-md">
         {loading && <Progress value={count} max={maxCount} />}
         <LogViewer />
       </div>
