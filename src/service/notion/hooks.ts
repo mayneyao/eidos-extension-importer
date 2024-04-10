@@ -32,7 +32,7 @@ export const useNotionImporter = (props: {
 
   const handleImport = async () => {
     addLog({
-      date: "2023-11-13 14:20:00",
+      date: new Date().toISOString(),
       level: "INFO",
       message: "Import started",
     });

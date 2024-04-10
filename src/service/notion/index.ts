@@ -2,6 +2,7 @@ import { Client } from "@notionhq/client";
 import {
   DatabaseObjectResponse,
   PageObjectResponse,
+  QueryDatabaseResponse,
   UserObjectResponse,
 } from "@notionhq/client/build/src/api-endpoints";
 import { NotionToMarkdown } from "notion-to-md";
@@ -43,11 +44,23 @@ export const getDatabase = async (
   return response as DatabaseObjectResponse;
 };
 
-export const getRecords = async (client: Client, databaseId: string) => {
+export const getRecords = async (
+  client: Client,
+  databaseId: string,
+  startCursor?: string
+): Promise<QueryDatabaseResponse["results"]> => {
+  const records: QueryDatabaseResponse["results"] = [];
   const response = await client.databases.query({
     database_id: databaseId,
+    start_cursor: startCursor,
   });
-  return response.results;
+  records.push(...response.results);
+  if (response.has_more) {
+    return records.concat(
+      await getRecords(client, databaseId, response.next_cursor!)
+    );
+  }
+  return records;
 };
 
 export const properties2Object = (
@@ -202,9 +215,17 @@ export const transformDatabaseSchema = (data: {
       titleName = property.name;
     }
     if (type === "multi_select" || type === "select" || type === "status") {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const newOptions = (property as any)[type]?.options.map((op: any) => {
+        return {
+          id: op.name,
+          name: op.name,
+          color: op.color,
+        };
+      });
+
       fieldProperty = {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        options: (property as any)[type]?.options,
+        options: newOptions,
       };
     }
     return {
