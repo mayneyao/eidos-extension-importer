@@ -25,6 +25,7 @@ function App() {
     withPageContent,
     addLog,
   });
+  const progress = (count / maxCount) * 100;
 
   return (
     <div className="container p-4 grid gap-4">
@@ -78,7 +79,7 @@ function App() {
         </Button>
       </div>
       <div className="w-full max-w-md">
-        {loading && <Progress value={count} max={maxCount} />}
+        {loading && <Progress value={progress} max={100} />}
         <LogViewer />
       </div>
     </div>

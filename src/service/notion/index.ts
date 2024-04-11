@@ -47,17 +47,19 @@ export const getDatabase = async (
 export const getRecords = async (
   client: Client,
   databaseId: string,
-  startCursor?: string
+  startCursor?: string,
+  callback?: (msg: string) => void
 ): Promise<QueryDatabaseResponse["results"]> => {
   const records: QueryDatabaseResponse["results"] = [];
   const response = await client.databases.query({
     database_id: databaseId,
     start_cursor: startCursor,
   });
+  callback?.(`get ${response.results.length} records`);
   records.push(...response.results);
   if (response.has_more) {
     return records.concat(
-      await getRecords(client, databaseId, response.next_cursor!)
+      await getRecords(client, databaseId, response.next_cursor!, callback)
     );
   }
   return records;

@@ -55,6 +55,9 @@ dependencies:
     version: 4.4.6(@types/react@18.2.22)(react@18.2.0)
 
 devDependencies:
+  '@eidos.space/types':
+    specifier: ^0.0.9
+    version: 0.0.9
   '@types/node':
     specifier: ^20.6.4
     version: 20.6.4
@@ -341,6 +344,10 @@ packages:
       '@babel/helper-string-parser': 7.22.5
       '@babel/helper-validator-identifier': 7.22.20
       to-fast-properties: 2.0.0
+    dev: true
+
+  /@eidos.space/types@0.0.9:
+    resolution: {integrity: sha512-5wOrq56Hptottca8ZrcTg1k0miLec3tq9sQVZ3l9kNuU34eAJoS36+PBXsLedotqb6DVno/WcaacoSTl1eI0Tg==}
     dev: true
 
   /@esbuild/android-arm64@0.18.20:

@@ -1,16 +1,19 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Client } from "@notionhq/client";
+
+import { sleep } from "@/lib/utils";
+import { Eidos } from "@eidos.space/types";
 import { PageObjectResponse } from "@notionhq/client/build/src/api-endpoints";
 import { useState } from "react";
 import {
   getDatabase,
-  getRecords,
-  transformDatabaseSchema,
-  properties2Object,
   getPageMarkdown,
+  getRecords,
+  properties2Object,
+  transformDatabaseSchema,
 } from ".";
-import { sleep } from "@/lib/utils";
+declare const eidos: Eidos;
 
 export const useNotionImporter = (props: {
   databaseId: string | undefined;
@@ -49,7 +52,13 @@ export const useNotionImporter = (props: {
       baseUrl: "https://notion-api-proxy.eidos.space",
     });
     const database = await getDatabase(client, databaseId);
-    const records = await getRecords(client, databaseId);
+    const records = await getRecords(client, databaseId, undefined, (msg) => {
+      addLog({
+        date: new Date().toISOString(),
+        level: "INFO",
+        message: msg,
+      });
+    });
     addLog({
       date: new Date().toISOString(),
       level: "INFO",
@@ -103,6 +112,8 @@ export const useNotionImporter = (props: {
       }
     }
 
+    // wait 1s for table creation
+    await sleep(1000);
     // add rows
     for (const record of records) {
       const docId = record.id.split("-").join("");
@@ -134,7 +145,8 @@ export const useNotionImporter = (props: {
             await space.createOrUpdateDocWithMarkdown(
               docId,
               mdString,
-              databaseId
+              databaseId,
+              recordObj.title
             );
             addLog({
               date: new Date().toISOString(),
@@ -142,7 +154,7 @@ export const useNotionImporter = (props: {
               message: `Added doc ${docId} to table tb_${databaseId}`,
             });
           }
-          await sleep(1000);
+          await sleep(100);
         }
       } catch (error) {
         addLog({
