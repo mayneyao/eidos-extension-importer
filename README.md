@@ -14,6 +14,8 @@ Eidos-Extension-Importer is an extension of Eidos, designed to import data from 
 - [x] Date
 - [ ] Person
 - [ ] File
+  - [ ] image
+  - [ ] others
 - [x] Checkbox
 - [x] URL
 - [x] Email
@@ -26,3 +28,15 @@ Eidos-Extension-Importer is an extension of Eidos, designed to import data from 
 - [ ] Last Edited Time
 - [ ] Last Edited By
 - [ ] Auto Number
+
+### Subpage Support
+
+only support standard markdown elements
+
+- [x] Heading
+- [x] Quote
+- [x] Divider
+- [x] Code
+- [x] Image
+  - [x] Notion hosted
+  - [ ] External

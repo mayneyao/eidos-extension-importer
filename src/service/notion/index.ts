@@ -5,8 +5,8 @@ import {
   QueryDatabaseResponse,
   UserObjectResponse,
 } from "@notionhq/client/build/src/api-endpoints";
-import { NotionToMarkdown } from "notion-to-md";
 import { MdBlock } from "notion-to-md/build/types";
+import { getNotion2Markdown } from "./markdown";
 
 // passing notion client to the option
 
@@ -15,8 +15,7 @@ export const getPageMarkdown = async (
   pageId: string,
   timeout: number = 10000
 ) => {
-  const n2m = new NotionToMarkdown({ notionClient: client });
-
+  const n2m = getNotion2Markdown(client);
   const timeoutPromise = new Promise((_, reject) => {
     setTimeout(() => {
       reject(new Error("Request timed out"));

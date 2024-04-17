@@ -141,7 +141,7 @@ export const useNotionImporter = (props: {
         if (withPageContent) {
           // create subDoc with markdown
           const mdString = await getPageMarkdown(client, record.id);
-          if (mdString.length) {
+          if (mdString?.length) {
             await space.createOrUpdateDocWithMarkdown(
               docId,
               mdString,
@@ -162,6 +162,7 @@ export const useNotionImporter = (props: {
           level: "WARN",
           message: `Failed to add row ${docId}, waiting 2s`,
         });
+        console.warn("Failed to add row", record.id, error);
         await sleep(2000);
       } finally {
         setCount((c) => c + 1);
