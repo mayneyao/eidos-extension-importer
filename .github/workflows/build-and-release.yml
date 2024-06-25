@@ -25,7 +25,9 @@ jobs:
         run: pnpm run build
 
       - name: Archive Production Artifact
-        run: zip -r build-${{ github.ref_name }}.zip dist/
+        run: |
+          cd dist
+          zip -r ../build-${{ github.ref_name }}.zip .
 
       - name: Create and Upload Release
         uses: softprops/action-gh-release@v2
