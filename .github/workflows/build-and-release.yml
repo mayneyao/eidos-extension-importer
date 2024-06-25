@@ -25,15 +25,15 @@ jobs:
         run: pnpm run build
 
       - name: Archive Production Artifact
-        run: zip -r build.zip dist/
+        run: zip -r build-${{ github.ref_name }}.zip dist/
 
       - name: Create and Upload Release
         uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         with:
-          files: build.zip
-          tag_name: ${{ github.ref }}
-          name: Release ${{ github.ref }}
+          files: build-${{ github.ref_name }}.zip
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
           draft: false
           prerelease: false
